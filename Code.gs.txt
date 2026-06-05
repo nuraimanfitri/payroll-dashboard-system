@@ -1,0 +1,616 @@
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile("index")
+    .setTitle("Payroll Dashboard")
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function getPayrollData(sheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(sheetName);
+
+  if (!sh) {
+    return { ok: false, message: "Sheet tidak dijumpai: " + sheetName };
+  }
+
+  const headerRow = 3;
+  const startCol = 1;
+  const lastCol = sh.getLastColumn();
+  const lastRow = sh.getLastRow();
+
+  const range = sh.getRange(
+    headerRow,
+    startCol,
+    lastRow - headerRow + 1,
+    lastCol
+  );
+
+  return {
+    ok: true,
+    sheetName,
+    headerRow,
+    data: range.getDisplayValues(),
+    backgrounds: range.getBackgrounds(),
+    fontColors: range.getFontColors()
+  };
+}
+
+
+function getSheetData(sheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(sheetName);
+
+  if (!sh) {
+    return {
+      ok: false,
+      message: "Sheet tidak dijumpai: " + sheetName,
+      data: []
+    };
+  }
+
+  const range = sh.getDataRange();
+
+  return {
+    ok: true,
+    sheetName,
+    data: range.getDisplayValues(),
+    backgrounds: range.getBackgrounds(),
+    fontColors: range.getFontColors()
+  };
+}
+
+function updatePayrollRows(sheetName, rows) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(sheetName);
+
+  if (!sh) {
+    return {
+      ok: false,
+      message: "Sheet tidak dijumpai."
+    };
+  }
+
+  const headerRow = 3;
+
+  const headers = sh
+    .getRange(headerRow, 1, 1, sh.getLastColumn())
+    .getDisplayValues()[0];
+
+  // LOCK COLUMN
+  const colJumlahOT = findColumn_(headers, "JUMLAH OT");
+
+  const colTotalSalary = findColumn_(headers, "TOTAL", 1);
+
+  const lockedCols = [
+    colJumlahOT,
+    colTotalSalary
+  ];
+
+  rows.forEach(item => {
+
+    item.values.forEach((v, i) => {
+
+      const colNumber = i + 1;
+
+      // SKIP LOCKED COLUMN
+      if (lockedCols.includes(colNumber)) {
+        return;
+      }
+
+      sh.getRange(item.rowNumber, colNumber)
+        .setValue(v);
+
+    });
+
+  });
+
+  return {
+    ok: true,
+    message: "Payroll table updated."
+  };
+}
+
+function getAvailableMonths() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  return ss.getSheets()
+    .map(s => s.getName())
+    .filter(name =>
+      ![
+        "KWSP_Table",
+        "PERKESO_Table",
+        "SIP_Table"
+      ].includes(name)
+    );
+}
+
+function savePayslipTemplate(sheetName, rowNumber, template) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(sheetName);
+
+  if (!sh) {
+    return { ok: false, message: "Sheet tidak dijumpai." };
+  }
+
+  const headerRow = 3;
+  const headers = sh
+    .getRange(headerRow, 1, 1, sh.getLastColumn())
+    .getDisplayValues()[0];
+
+  const col = headers.indexOf("PaySlip Type") + 1;
+
+if (col === 0) {
+  return { ok: false, message: "Column PaySlip Type tak jumpa." };
+}
+
+  sh.getRange(rowNumber, col).setValue(template);
+
+  return {
+    ok: true,
+    message: "Payslip template saved."
+  };
+}
+
+function calculatePayrollForSheet(sheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(sheetName);
+
+  if (!sh) {
+    return {
+      ok: false,
+      message: "Sheet tidak dijumpai: " + sheetName
+    };
+  }
+
+
+
+  calculatePayrollSheet_(sh);
+
+  return {
+    ok: true,
+    message: "Payroll calculated for " + sheetName
+  };
+}
+
+function calculatePayrollSheet_(sh) {
+  const headerRow = 3;
+  const lastRow = sh.getLastRow();
+  const lastCol = sh.getLastColumn();
+
+  if (lastRow <= headerRow) return;
+
+  const headers = sh
+    .getRange(headerRow, 1, 1, lastCol)
+    .getDisplayValues()[0];
+
+  const colTotalSalary = findColumn_(headers, "TOTAL", 1);
+  const cBasic = findColumn_(headers, "BASIC");
+
+  const colKwsp = findColumn_(headers, "KWSP 11%");
+  const colPerkeso = findColumnAny_(headers, ["Socso", "Sosco"]);
+  const colSip = findColumn_(headers, "SIP");
+
+  const colOthersCost = findColumn_(headers, "Others Cost");
+
+  const colTotalDeduct = findColumn_(headers, "TOTAL", 2);
+  const colNet = findColumn_(headers, "Net Payment");
+
+  const colMajKwsp = findColumn_(headers, "Majikan KWSP 13%");
+  const colMajPerkeso = findColumnAny_(headers, ["Majikan Socso", "Majikan Sosco"]);
+  const colMajSip = findColumn_(headers, "Majikan SIP");
+
+  const kwspTable = readKWSPTable_();
+  const perkesoTable = readPERKESOTable_();
+  const sipTable = readSIPTable_();
+
+  for (let row = headerRow + 1; row <= lastRow; row++) {
+    const jabatan = sh.getRange(row, findColumn_(headers, "Jabatan")).getDisplayValue();
+const nama = sh.getRange(row, findColumn_(headers, "Nama")).getDisplayValue();
+const noPekerja = sh.getRange(row, findColumn_(headers, "No. Pekerja")).getDisplayValue();
+
+if (!jabatan && !nama && !noPekerja) continue;
+    const salary = toNumber_(sh.getRange(row, cBasic).getValue());
+
+    if (salary === null || salary === undefined) continue;
+
+    const kwsp = lookup_(kwspTable, salary, "pekerja");
+    const majKwsp = lookup_(kwspTable, salary, "majikan");
+
+    const perkeso = lookup_(perkesoTable, salary, "pekerja");
+    const majPerkeso = lookup_(perkesoTable, salary, "majikan");
+
+    const sip = lookup_(sipTable, salary, "pekerja");
+    const majSip = lookup_(sipTable, salary, "majikan");
+
+    const othersCost = toNumber_(sh.getRange(row, colOthersCost).getValue());
+
+    const totalDeduct = kwsp + perkeso + sip + othersCost;
+    const totalSalary = toNumber_(
+  sh.getRange(row, colTotalSalary).getValue()
+);
+
+const net = totalSalary - totalDeduct;
+
+    sh.getRange(row, colKwsp).setValue(kwsp);
+    sh.getRange(row, colPerkeso).setValue(perkeso);
+    sh.getRange(row, colSip).setValue(sip);
+
+    sh.getRange(row, colTotalDeduct).setValue(totalDeduct);
+    sh.getRange(row, colNet).setValue(net);
+
+    sh.getRange(row, colMajKwsp).setValue(majKwsp);
+    sh.getRange(row, colMajPerkeso).setValue(majPerkeso);
+    sh.getRange(row, colMajSip).setValue(majSip);
+  }
+}
+
+function readKWSPTable_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("KWSP_Table");
+  const data = sh.getDataRange().getDisplayValues();
+
+  return data.slice(1).map(r => ({
+    lower: toNumber_(r[0]),
+    upper: toNumber_(r[1]),
+    majikan: toNumber_(r[2]),
+    pekerja: toNumber_(r[3])
+  })).filter(r => r.upper);
+}
+
+function readPERKESOTable_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("PERKESO_Table");
+  const data = sh.getDataRange().getDisplayValues();
+
+  return data.slice(1).map(r => ({
+    lower: toNumber_(r[0]),
+    upper: toNumber_(r[1]),
+    majikan: toNumber_(r[2]),
+    pekerja: toNumber_(r[3])
+  })).filter(r => r.upper);
+}
+
+function readSIPTable_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("SIP_Table");
+  const data = sh.getDataRange().getDisplayValues();
+
+  return data.slice(1).map(r => ({
+    lower: toNumber_(r[0]),
+    upper: toNumber_(r[1]),
+    majikan: toNumber_(r[2]),
+    pekerja: toNumber_(r[3])
+  })).filter(r => r.upper);
+}
+
+function lookup_(table, salary, type) {
+  const found = table.find(r =>
+    salary >= r.lower && salary <= r.upper
+  );
+
+  return found ? found[type] : 0;
+}
+
+function findColumnAny_(headers, names, occurrence = 1) {
+  for (const name of names) {
+    try {
+      return findColumn_(headers, name, occurrence);
+    } catch (e) {}
+  }
+
+  throw new Error("Column not found: " + names.join(", "));
+}
+
+function findColumn_(headers, name, occurrence = 1) {
+  const target = normalize_(name);
+  let count = 0;
+
+  for (let i = 0; i < headers.length; i++) {
+    if (normalize_(headers[i]) === target) {
+      count++;
+
+      if (count === occurrence) {
+        return i + 1;
+      }
+    }
+  }
+
+  throw new Error("Column not found: " + name);
+}
+
+function normalize_(text) {
+  return String(text || "")
+    .replace(/\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function toNumber_(value) {
+  if (value === null || value === undefined) return 0;
+
+  const cleaned = String(value)
+    .replace(/RM/gi, "")
+    .replace(/,/g, "")
+    .replace(/-/g, "0")
+    .trim();
+
+  const n = Number(cleaned);
+
+  return isNaN(n) ? 0 : n;
+}
+
+
+
+function sendPayrollForSheet(sheetName) {
+  try {
+    createAndSendSlipGaji(sheetName);
+
+    return {
+      ok: true,
+      message: "Payroll sent for " + sheetName
+    };
+
+  } catch (err) {
+    return {
+      ok: false,
+      message: "Error - " + err.message
+    };
+  }
+}
+
+function createAndSendSlipGaji(sheetName) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var salSheet = ss.getSheetByName(sheetName);
+
+  if (!salSheet) {
+    throw new Error('Sheet "' + sheetName + '" tak jumpa.');
+  }
+
+  var templateMap = {
+    "Template Original": "1aj5u0BzjH4ptSGOZ4tYdeVZlb3li2QeaFDTwZ-HzMAQ",
+    "Template Rumah Sewa": "13WUi7LARUg-ttC2iApIoocRHBPhA_3atPDQfNXYZCM0",
+    "Template Gaji berdasarkan Hari": "1zuuLByX0z6ABHCVwDQJVy4f8ysVgEuqVhb4TKuLHJ-4",
+    "Template Staf PT - Gaji Berdasarkan Jam": "1adeCVmr837scWuHoo3qGB7Es5jwc8-JBveCsVW4ntSk"
+  };
+
+  var headerRow = 3;
+  var headers = salSheet
+    .getRange(headerRow, 1, 1, salSheet.getLastColumn())
+    .getDisplayValues()[0];
+
+  var cJabatan = findColumn_(headers, "Jabatan");
+  var cNoPekerja = findColumn_(headers, "No. Pekerja");
+  var cKwspNo = findColumn_(headers, "No. KWSP");
+  var cBank = findColumn_(headers, "Bank");
+  var cNama = findColumn_(headers, "Nama");
+  var cNoIc = findColumn_(headers, "No IC");
+
+  var cHourJam = findColumn_(headers, "hour Jam");
+  var cDayHari = findColumn_(headers, "day Hari");
+
+  var cBasic = findColumn_(headers, "BASIC");
+  var cHibah = findColumn_(headers, "HIBAH/INSURANS");
+  var cRumah = findColumn_(headers, "RUMAH SEWA");
+  var cElaun = findColumn_(headers, "ELAUN");
+  const cAdjustment = findColumn_(headers, "Adjustment");
+  const cAdjustmentPay = findColumnAny_(headers, ["Adjustment Payment", "Adjusment Payment"]);
+  var cJamOt = findColumn_(headers, "JAM OT");
+  var cJumlahOt = findColumn_(headers, "JUMLAH OT");
+  var cTotalSalary = findColumn_(headers, "TOTAL", 1);
+
+  var cKwsp = findColumn_(headers, "KWSP 11%");
+  var cSocso = findColumnAny_(headers, ["Socso", "Sosco"]);
+  var cSip = findColumn_(headers, "SIP");
+
+  var cOther = findColumn_(headers, "Other");
+  var cOthersCost = findColumn_(headers, "Others Cost");
+
+  var cDeduct = findColumn_(headers, "TOTAL", 2);
+  var cNet = findColumn_(headers, "Net Payment");
+
+  var cMajKwsp = findColumn_(headers, "Majikan KWSP 13%");
+  var cMajSocso = findColumnAny_(headers, ["Majikan Socso", "Majikan Sosco"]);
+  var cMajSip = findColumn_(headers, "Majikan SIP");
+
+  var cEmail = findColumn_(headers, "Email");
+  var cFolderId = findColumnAny_(headers, ["Folder ID", "File ID"]);
+  var cPaySlipType = findColumn_(headers, "PaySlip Type");
+  var cStatus = findColumn_(headers, "Status");
+  var cStoredLink = findColumn_(headers, "File Stored Link");
+
+  var totalRows = salSheet.getLastRow();
+
+  for (var rowNo = headerRow + 1; rowNo <= totalRows; rowNo++) {
+    var jabatan = salSheet.getRange(rowNo, cJabatan).getDisplayValue();
+    var noPekerja = salSheet.getRange(rowNo, cNoPekerja).getDisplayValue();
+    var kwsp = salSheet.getRange(rowNo, cKwspNo).getDisplayValue();
+    var bank = salSheet.getRange(rowNo, cBank).getDisplayValue();
+    var name = salSheet.getRange(rowNo, cNama).getDisplayValue();
+    var noKp = salSheet.getRange(rowNo, cNoIc).getDisplayValue();
+
+    if (!jabatan && !name && !noPekerja) continue;
+
+    var rawHourJam = salSheet.getRange(rowNo, cHourJam).getDisplayValue();
+    var rawDayHari = salSheet.getRange(rowNo, cDayHari).getDisplayValue();
+    var rawJamOT = salSheet.getRange(rowNo, cJamOt).getDisplayValue();
+
+    var hourJam = rawHourJam ? rawHourJam + " Jam" : "";
+    var dayHari = rawDayHari ? rawDayHari + " Hari" : "";
+    var jamOT = rawJamOT ? rawJamOT + " Jam" : "";
+
+    var basic = salSheet.getRange(rowNo, cBasic).getDisplayValue();
+    var hibah = salSheet.getRange(rowNo, cHibah).getDisplayValue();
+    var rental = salSheet.getRange(rowNo, cRumah).getDisplayValue();
+    var elaun = salSheet.getRange(rowNo, cElaun).getDisplayValue();
+    const adjustment =  salSheet.getRange(rowNo, cAdjustment).getDisplayValue();
+    const adjustmentPay = salSheet.getRange(rowNo, cAdjustmentPay).getDisplayValue();
+    var jumlahOT = salSheet.getRange(rowNo, cJumlahOt).getDisplayValue();
+    var total = salSheet.getRange(rowNo, cTotalSalary).getDisplayValue();
+
+    var deKWSP = salSheet.getRange(rowNo, cKwsp).getDisplayValue();
+    var desocso = salSheet.getRange(rowNo, cSocso).getDisplayValue();
+    var deSIP = salSheet.getRange(rowNo, cSip).getDisplayValue();
+
+    var other = salSheet.getRange(rowNo, cOther).getDisplayValue();
+    var othersCost = salSheet.getRange(rowNo, cOthersCost).getDisplayValue();
+
+    var deduction = salSheet.getRange(rowNo, cDeduct).getDisplayValue();
+    var netTotal = salSheet.getRange(rowNo, cNet).getDisplayValue();
+
+    var mKWSP = salSheet.getRange(rowNo, cMajKwsp).getDisplayValue();
+    var mSOCSO = salSheet.getRange(rowNo, cMajSocso).getDisplayValue();
+    var mSIP = salSheet.getRange(rowNo, cMajSip).getDisplayValue();
+
+    var sEmail = salSheet.getRange(rowNo, cEmail).getDisplayValue();
+    var folderId = salSheet.getRange(rowNo, cFolderId).getDisplayValue();
+    var paySlipType = salSheet.getRange(rowNo, cPaySlipType).getDisplayValue();
+
+    if (!name) {
+      salSheet.getRange(rowNo, cStatus).setValue("Skipped - Nama kosong");
+      continue;
+    }
+
+    if (!noPekerja) {
+      salSheet.getRange(rowNo, cStatus).setValue("Skipped - No Pekerja kosong");
+      continue;
+    }
+
+    if (!sEmail) {
+      salSheet.getRange(rowNo, cStatus).setValue("Skipped - Email kosong");
+      continue;
+    }
+
+    if (!folderId) {
+      salSheet.getRange(rowNo, cStatus).setValue("Skipped - Folder ID kosong");
+      continue;
+    }
+
+    if (!paySlipType) {
+      salSheet.getRange(rowNo, cStatus).setValue("Skipped - PaySlip Type kosong");
+      continue;
+    }
+
+    var templateId = templateMap[paySlipType];
+
+    if (!templateId) {
+      salSheet.getRange(rowNo, cStatus).setValue("Error - Template tak jumpa");
+      continue;
+    }
+
+    try {
+      salSheet.getRange(rowNo, cStatus).setValue("Generating...");
+      SpreadsheetApp.flush();
+
+      var targetFolder = DriveApp.getFolderById(folderId);
+      var salaryTemplate = DriveApp.getFileById(templateId);
+      var rawSalFile = salaryTemplate.makeCopy(name + " - Slip Gaji", targetFolder);
+
+      var rawFile = DocumentApp.openById(rawSalFile.getId());
+      var body = rawFile.getBody();
+
+      var monthText = formatMonthYear_(sheetName);
+      body.replaceText("month year", monthText);
+
+      body.replaceText("noPekerja", noPekerja);
+      body.replaceText("name", name);
+      body.replaceText("position", jabatan);
+      body.replaceText("nokp", noKp);
+      body.replaceText("noKWSP", kwsp);
+      body.replaceText("nobank", bank);
+
+      body.replaceText("basic", basic);
+      body.replaceText("hibah", hibah);
+      body.replaceText("rental", rental);
+      body.replaceText("rumahSewa", rental);
+      body.replaceText("allowance", elaun);
+      body.replaceText("Adjustment", adjustment);
+      body.replaceText("adjustmentPay", adjustmentPay); 
+
+      body.replaceText("hour", hourJam);
+      body.replaceText("day", dayHari);
+      body.replaceText("jamOT", jamOT);
+
+      body.replaceText("jumlahOT", jumlahOT);
+      body.replaceText("total", total);
+
+      body.replaceText("-KWSP", deKWSP);
+      body.replaceText("-SOCSO", desocso);
+      body.replaceText("-SIP", deSIP);
+
+      if (other && othersCost) {
+        body.replaceText("Other", other);
+        body.replaceText("-AdditionalFee", "-" + othersCost);
+        body.replaceText("AdditionalFee", othersCost);
+      } else {
+        body.replaceText("Other", "");
+        body.replaceText("-AdditionalFee", "");
+        body.replaceText("AdditionalFee", "");
+      }
+
+      body.replaceText("deduct", deduction);
+      body.replaceText("net", netTotal);
+
+      body.replaceText("mKWSP", mKWSP);
+      body.replaceText("mSOCSO", mSOCSO);
+      body.replaceText("mSIP", mSIP);
+
+      rawFile.saveAndClose();
+
+      var docFile = DriveApp.getFileById(rawSalFile.getId());
+
+      var pdfBlob = docFile.getAs(MimeType.PDF)
+        .setName(name + " - Slip Gaji " + monthText + ".pdf");
+
+      var pdfFile = targetFolder.createFile(pdfBlob);
+
+      docFile.setTrashed(true);
+
+      GmailApp.sendEmail(
+        sEmail,
+        "SLIP GAJI " + monthText,
+        "Salam sejahtera.\n\nBersama-sama e-mel ini, disertakan slip gaji anda bagi bulan " + monthText + " untuk rujukan dan rekod anda.\n\nTerima kasih.",
+        { attachments: [pdfBlob] }
+      );
+
+      salSheet.getRange(rowNo, cStatus).setValue("Sent");
+      salSheet.getRange(rowNo, cStoredLink).setValue(pdfFile.getUrl());
+
+    } catch (err) {
+      salSheet.getRange(rowNo, cStatus).setValue("Error - " + err.message);
+    }
+  }
+}
+
+function formatMonthYear_(sheetName) {
+
+  var parts = String(sheetName).trim().split(" ");
+
+  if (parts.length < 2) {
+    return sheetName;
+  }
+
+  var monthMap = {
+    JAN: "JANUARI",
+    FEB: "FEBRUARI",
+    MAC: "MAC",
+    APR: "APRIL",
+    MEI: "MEI",
+    JUN: "JUN",
+    JUL: "JULAI",
+    OGS: "OGOS",
+    SEP: "SEPTEMBER",
+    OKT: "OKTOBER",
+    NOV: "NOVEMBER",
+    DIS: "DISEMBER"
+  };
+
+  var monthShort = parts[0].toUpperCase();
+  var yearShort = parts[1];
+
+  var fullMonth =
+    monthMap[monthShort] || monthShort;
+
+  var fullYear =
+    yearShort.length === 2
+      ? "20" + yearShort
+      : yearShort;
+
+  return fullMonth + " " + fullYear;
+}

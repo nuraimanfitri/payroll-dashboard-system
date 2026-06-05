@@ -1,0 +1,1404 @@
+<!doctype html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <style>
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:'Montserrat',sans-serif;
+      background:#f5f5f5;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .card{
+      width:95%;
+      max-width:1800px;
+      background:#fff;
+      border:1px solid #e5e5e5;
+      border-radius:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,.08);
+      min-height:85vh;
+      overflow:hidden;
+    }
+
+    .top-header{
+      background:#008000;
+      color:white;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:20px;
+    }
+
+    .top-header img{
+      height:60px;
+      border-radius:8px;
+    }
+
+    .top-header h1{
+      margin:0;
+      font-size:22px;
+      font-weight:900;
+      text-transform:uppercase;
+      color:#fff;
+      text-shadow:0 0.05em 10px rgba(0,0,0,1);
+    }
+
+    .main-content{
+      padding:28px;
+    }
+
+    .adminShell{
+      display:grid;
+      grid-template-columns:260px minmax(0,1fr);
+      gap:16px;
+    }
+
+    .adminSidebar{
+      background:#ffffff;
+      border:1px solid #e5e7eb;
+      border-radius:26px;
+      padding:20px;
+      box-shadow:0 16px 35px rgba(0,0,0,.06);
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .adminProfileCard{
+      background:linear-gradient(135deg,#f8fafc,#eef2ff);
+      border-radius:20px;
+      padding:14px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      border:1px solid #edf2f7;
+    }
+
+    .adminAvatar{
+      width:50px;
+      height:50px;
+      border-radius:50%;
+      background:linear-gradient(135deg,#10b981,#3b82f6);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:20px;
+    }
+
+    .adminProfileName{
+      font-weight:800;
+      font-size:15px;
+      color:#111827;
+    }
+
+    .adminProfileRole{
+      font-size:12px;
+      color:#6b7280;
+    }
+
+    .adminMenu{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .adminMenuBtn{
+      width:100%;
+      border:none;
+      border-radius:16px;
+      padding:14px 16px;
+      background:#f3f4f6;
+      color:#111827;
+      font-weight:700;
+      font-size:14px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      text-align:left;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .adminMenuBtn i{
+      width:20px;
+      min-width:20px;
+      display:flex;
+      justify-content:center;
+      font-size:18px;
+    }
+
+    .adminMenuBtn.active,
+    .adminMenuBtn:hover{
+      background:#ddf7ef;
+      color:#0f766e;
+    }
+
+    .adminMain{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      min-width:0;
+    }
+
+    .adminTopbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:24px;
+      padding:22px 24px;
+      box-shadow:0 16px 35px rgba(0,0,0,.06);
+    }
+
+    .adminTopTitle{
+      font-size:34px;
+      font-weight:800;
+      color:#111827;
+      line-height:1.1;
+    }
+
+    .adminTopSubtitle{
+      font-size:14px;
+      color:#6b7280;
+      margin-top:6px;
+    }
+
+    .adminQuickInfo{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+
+    .miniChip{
+      background:#f3f4f6;
+      border-radius:999px;
+      padding:10px 14px;
+      font-size:13px;
+      font-weight:600;
+      color:#111827;
+    }
+
+    .monthSelect{
+      min-width:170px;
+      padding:12px 14px;
+      border-radius:999px;
+      border:1px solid #e5e7eb;
+      background:#f3f4f6;
+      font-weight:700;
+      color:#111827;
+      outline:none;
+    }
+
+    .sectionCard{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:24px;
+      padding:20px;
+      box-shadow:0 16px 35px rgba(0,0,0,.06);
+      min-width:0;
+    }
+
+    .sectionTitle{
+      font-size:18px;
+      font-weight:900;
+      margin-bottom:12px;
+      color:#111827;
+    }
+
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .searchBox{
+      max-width:380px;
+      width:100%;
+      padding:13px 16px;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      outline:none;
+      font-size:14px;
+      background:#f9fafb;
+    }
+
+    .tableWrap{
+  width:100%;
+  max-height:520px;
+  overflow:auto;
+  border-radius:18px;
+  border:1px solid #eef2f7;
+  background:#fff;
+}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:1600px;
+    }
+
+    th,td{
+      padding:12px 10px;
+      text-align:left;
+      border-bottom:1px solid #eee;
+      font-size:13px;
+      vertical-align:middle;
+      white-space:nowrap;
+    }
+
+    th{
+  font-weight:900;
+  text-transform:uppercase;
+  font-size:11px;
+  letter-spacing:.5px;
+  position:sticky;
+  top:0;
+  z-index:20;
+  white-space:nowrap;
+  border-bottom:1px solid #d1d5db;
+}
+
+    tr:hover td{
+      filter:brightness(.97);
+    }
+
+    .templateDropdown{
+      min-width:260px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid #d1d5db;
+      background:#fff;
+      font-weight:600;
+      outline:none;
+    }
+
+    .payrollInput{
+  width:100%;
+  min-width:120px;
+  padding:10px 12px;
+  border:1px solid #d1d5db;
+  border-radius:10px;
+  font-size:13px;
+  background:#fff;
+  outline:none;
+  font-family:'Montserrat',sans-serif;
+}
+
+    .msg{
+      margin-top:12px;
+      font-size:14px;
+      color:#374151;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    .statsGrid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+      margin-bottom:18px;
+    }
+
+    .statCard{
+      border-radius:22px;
+      padding:22px;
+      color:#fff;
+      min-height:110px;
+      box-shadow:0 16px 30px rgba(0,0,0,.08);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .statCard::after{
+      content:"";
+      position:absolute;
+      right:-20px;
+      top:-20px;
+      width:100px;
+      height:100px;
+      border-radius:50%;
+      background:rgba(255,255,255,.12);
+    }
+
+    .statBlue{background:linear-gradient(135deg,#f59e0b,#fb923c);}
+    .statGreen{background:linear-gradient(135deg,#22c55e,#16a34a);}
+    .statPurple{background:linear-gradient(135deg,#7c3aed,#4f46e5);}
+    .statRed{background:linear-gradient(135deg,#ef4444,#b91c1c);}
+
+    .statLabel{
+      font-size:13px;
+      opacity:.92;
+      margin-bottom:12px;
+      position:relative;
+      z-index:1;
+    }
+
+    .statValue{
+      font-size:32px;
+      font-weight:800;
+      position:relative;
+      z-index:1;
+    }
+
+    @media(max-width:900px){
+      body{padding:10px}
+      .main-content{padding:14px}
+      .adminShell{grid-template-columns:1fr}
+      .adminSidebar,.adminTopbar,.sectionCard{border-radius:18px}
+      .adminTopbar{flex-direction:column}
+      .adminTopTitle{font-size:24px}
+      .statsGrid{grid-template-columns:1fr}
+    }
+
+    .templateLegend{
+  display:inline-flex;
+  flex-direction:column;
+  gap:4px;
+  margin-bottom:14px;
+  font-size:13px;
+  font-weight:600;
+}
+
+.templateLegend div{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.templateLegend span{
+  width:90px;
+  height:18px;
+  display:inline-block;
+}
+
+.adminPrimaryBtn{
+  width:auto;
+  min-width:160px;
+  border:none;
+  border-radius:14px;
+  padding:13px 18px;
+  background:#111827;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.adminSecondaryBtn{
+  width:auto;
+  min-width:120px;
+  border:none;
+  border-radius:14px;
+  padding:13px 18px;
+  background:#e5e7eb;
+  color:#111827;
+  font-weight:700;
+  cursor:pointer;
+}
+
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <div class="top-header">
+    <img src="https://imgur.com/m6aZbE4.png" alt="Logo">
+    <h1>PAYROLL SYSTEM</h1>
+  </div>
+
+  <div class="main-content">
+
+    <div class="adminShell">
+
+      <aside class="adminSidebar">
+
+        <div class="adminProfileCard">
+          <div class="adminAvatar">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+          </div>
+
+          <div>
+            <div class="adminProfileName">Payroll Admin</div>
+            <div class="adminProfileRole">admin panel</div>
+          </div>
+        </div>
+
+        <div class="adminMenu">
+          <button class="adminMenuBtn active" onclick="openPage('payroll', this)">
+            <i class="fa-solid fa-money-bill-wave"></i>
+            Payroll
+          </button>
+
+          <button class="adminMenuBtn" onclick="openPage('kwsp', this)">
+            <i class="fa-solid fa-wallet"></i>
+            KWSP
+          </button>
+
+          <button class="adminMenuBtn" onclick="openPage('perkeso', this)">
+            <i class="fa-solid fa-shield-halved"></i>
+            PERKESO
+          </button>
+
+          <button class="adminMenuBtn" onclick="openPage('sip', this)">
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+            SIP
+          </button>
+        </div>
+
+      </aside>
+
+      <main class="adminMain">
+
+        <div class="adminTopbar">
+
+          <div>
+            <div class="adminTopTitle" id="pageTitle">Payroll</div>
+            <div class="adminTopSubtitle" id="pageSubtitle">
+              Display payroll data from selected month
+            </div>
+          </div>
+
+          <div class="adminQuickInfo">
+            <select id="monthSelect" class="monthSelect" onchange="loadPayroll()">
+              <option value="MEI 26">MEI 26</option>
+            </select>
+
+            <div class="miniChip">
+              Sheet: <span id="activeSheetName">MEI 26</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div id="statsArea" class="statsGrid">
+          <div class="statCard statBlue">
+            <div class="statLabel">Total Staff</div>
+            <div class="statValue" id="statStaff">0</div>
+          </div>
+
+          <div class="statCard statGreen">
+            <div class="statLabel">Total Basic</div>
+            <div class="statValue" id="statBasic">0</div>
+          </div>
+
+          <div class="statCard statPurple">
+            <div class="statLabel">Total Net</div>
+            <div class="statValue" id="statNet">0</div>
+          </div>
+
+          <div class="statCard statRed">
+            <div class="statLabel">Total Deduction</div>
+            <div class="statValue" id="statDeduct">0</div>
+          </div>
+        </div>
+
+        <section class="sectionCard">
+
+          <div class="toolbar">
+
+  <div>
+    <div class="sectionTitle" id="tableTitle">Payroll Table</div>
+
+    <div class="templateLegend" id="templateLegendBox">
+  <div><span style="background:#ead1dc;"></span>Template Original</div>
+  <div><span style="background:#ff9900;"></span>Template Rumah Sewa</div>
+  <div><span style="background:#00ffcc;"></span>Template Gaji berdasarkan Hari</div>
+  <div><span style="background:#38761d;"></span>Template Staf PT - Gaji Berdasarkan Jam</div>
+</div>
+  </div>
+
+ <div id="payrollActions" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+
+  <button
+    id="calculateBtn"
+    class="adminPrimaryBtn"
+    onclick="calculateCurrentSheet()">
+    Calculate Payroll
+  </button>
+
+<button
+  id="sendPayrollBtn"
+  class="adminPrimaryBtn"
+  onclick="sendCurrentSheet()">
+  Send Payroll
+</button>
+
+  <input
+    id="searchInput"
+    class="searchBox"
+    placeholder="Search data..."
+    oninput="filterTable()">
+
+</div>
+
+</div>
+
+          <div class="tableWrap">
+            <div id="tableContainer">Loading...</div>
+          </div>
+          
+          <div style="margin-top:14px; display:flex; gap:10px;">
+
+  <button
+    id="editTableBtn"
+    class="adminPrimaryBtn"
+    onclick="toggleEditPayroll()">
+    Edit Table
+  </button>
+
+  <button
+    id="cancelEditBtn"
+    class="adminSecondaryBtn hidden"
+    onclick="cancelEditPayroll()">
+    Cancel
+  </button>
+
+</div>
+          <div class="msg" id="msg"></div>
+
+        </section>
+
+      </main>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  let currentPage = "payroll";
+let currentData = [];
+let currentHeaders = [];
+let currentSheetName = "MEI 26";
+
+let isEditMode = false;
+let payrollRowsCache = [];
+let lastPayrollResponse = null;
+
+  const templateOptions = [
+    "Template Original",
+    "Template Rumah Sewa",
+    "Template Gaji berdasarkan Hari",
+    "Template Staf PT - Gaji Berdasarkan Jam"
+  ];
+
+  document.addEventListener("DOMContentLoaded", function(){
+    loadMonthDropdown();
+    loadPayroll();
+  });
+
+  function setMsg(text){
+    document.getElementById("msg").textContent = text || "";
+  }
+
+  function setActiveButton(btn){
+    document.querySelectorAll(".adminMenuBtn").forEach(b => {
+      b.classList.remove("active");
+    });
+
+    if(btn){
+      btn.classList.add("active");
+    }
+  }
+
+  function openPage(page, btn){
+
+  currentPage = page;
+
+  setActiveButton(btn);
+
+  document.getElementById("searchInput").value = "";
+
+  setMsg("");
+
+  const legend = document.getElementById("templateLegendBox");
+
+  const editBtn = document.getElementById("editTableBtn");
+
+  const cancelBtn = document.getElementById("cancelEditBtn");
+
+  const calculateBtn = document.getElementById("calculateBtn");
+
+  const sendBtn = document.getElementById("sendPayrollBtn");
+
+  if(page === "payroll"){
+
+    legend.classList.remove("hidden");
+
+    editBtn.classList.remove("hidden");
+
+    calculateBtn.classList.remove("hidden");
+
+    document.getElementById("pageTitle").textContent = "Payroll";
+
+    document.getElementById("pageSubtitle").textContent =
+      "Display payroll data from selected month";
+
+    document.getElementById("tableTitle").textContent =
+      "Payroll Table";
+
+    document.getElementById("monthSelect")
+      .classList.remove("hidden");
+
+    document.getElementById("statsArea")
+      .classList.remove("hidden");
+
+      sendBtn.classList.remove("hidden");
+
+    loadPayroll();
+  }
+
+  if(page === "kwsp"){
+
+    legend.classList.add("hidden");
+
+    editBtn.classList.add("hidden");
+
+    cancelBtn.classList.add("hidden");
+
+    calculateBtn.classList.add("hidden");
+
+
+  sendBtn.classList.add("hidden");
+    isEditMode = false;
+
+    document.getElementById("pageTitle").textContent =
+      "KWSP";
+
+    document.getElementById("pageSubtitle").textContent =
+      "Reference table from KWSP sheet";
+
+    document.getElementById("tableTitle").textContent =
+      "KWSP Reference";
+
+    document.getElementById("monthSelect")
+      .classList.add("hidden");
+
+    document.getElementById("statsArea")
+      .classList.add("hidden");
+
+    loadNormalSheet("KWSP_Table");
+  }
+
+  if(page === "perkeso"){
+
+    legend.classList.add("hidden");
+
+    editBtn.classList.add("hidden");
+
+    cancelBtn.classList.add("hidden");
+
+    calculateBtn.classList.add("hidden");
+
+    sendBtn.classList.add("hidden");
+
+    isEditMode = false;
+
+    document.getElementById("pageTitle").textContent =
+      "PERKESO";
+
+    document.getElementById("pageSubtitle").textContent =
+      "Reference table from PERKESO sheet";
+
+    document.getElementById("tableTitle").textContent =
+      "PERKESO Reference";
+
+    document.getElementById("monthSelect")
+      .classList.add("hidden");
+
+    document.getElementById("statsArea")
+      .classList.add("hidden");
+
+    loadNormalSheet("PERKESO_Table");
+  }
+
+  if(page === "sip"){
+
+    legend.classList.add("hidden");
+
+    editBtn.classList.add("hidden");
+
+    cancelBtn.classList.add("hidden");
+
+    calculateBtn.classList.add("hidden");
+
+    sendBtn.classList.add("hidden");
+
+    isEditMode = false;
+
+    document.getElementById("pageTitle").textContent =
+      "SIP";
+
+    document.getElementById("pageSubtitle").textContent =
+      "Reference table from SIP sheet";
+
+    document.getElementById("tableTitle").textContent =
+      "SIP Reference";
+
+    document.getElementById("monthSelect")
+      .classList.add("hidden");
+
+    document.getElementById("statsArea")
+      .classList.add("hidden");
+
+    loadNormalSheet("SIP_Table");
+  }
+}
+
+  function loadMonthDropdown(){
+    google.script.run
+      .withSuccessHandler(function(months){
+        const select = document.getElementById("monthSelect");
+        select.innerHTML = "";
+
+        if(!months || !months.length){
+          select.innerHTML = `<option value="MEI 26">MEI 26</option>`;
+          return;
+        }
+
+        months.forEach(name => {
+          const opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          select.appendChild(opt);
+        });
+
+        if(months.includes("MEI 26")){
+          select.value = "MEI 26";
+        }
+
+        currentSheetName = select.value;
+      })
+      .getAvailableMonths();
+  }
+
+  function loadPayroll(){
+    currentPage = "payroll";
+
+    const sheetName = document.getElementById("monthSelect").value || "MEI 26";
+    currentSheetName = sheetName;
+
+    document.getElementById("activeSheetName").textContent = sheetName;
+    document.getElementById("tableContainer").innerHTML = "Loading payroll...";
+    setMsg("");
+
+    google.script.run
+      .withSuccessHandler(function(res){
+        if(!res || !res.ok){
+          document.getElementById("tableContainer").innerHTML = "";
+          setMsg(res ? res.message : "Failed to load payroll.");
+          return;
+        }
+
+        renderPayrollTable(res);
+      })
+      .withFailureHandler(function(err){
+        setMsg(err.message || "Failed to load payroll.");
+      })
+      .getPayrollData(sheetName);
+  }
+
+  function loadNormalSheet(sheetName){
+    currentSheetName = sheetName;
+    document.getElementById("activeSheetName").textContent = sheetName;
+    document.getElementById("tableContainer").innerHTML = "Loading...";
+    setMsg("");
+
+    google.script.run
+      .withSuccessHandler(function(res){
+        if(!res || !res.ok){
+          document.getElementById("tableContainer").innerHTML = "";
+          setMsg(res ? res.message : "Failed to load sheet.");
+          return;
+        }
+
+        renderNormalTable(res);
+      })
+      .withFailureHandler(function(err){
+        setMsg(err.message || "Failed to load sheet.");
+      })
+      .getSheetData(sheetName);
+  }
+
+  function renderPayrollTable(res){
+  lastPayrollResponse = res;
+
+  const data = res.data || [];
+  const bg = res.backgrounds || [];
+  const fc = res.fontColors || [];
+
+  if(!data.length){
+    document.getElementById("tableContainer").innerHTML = "No data.";
+    return;
+  }
+
+  currentData = data;
+  currentHeaders = data[0];
+  payrollRowsCache = [];
+
+  const normalizedHeaders = currentHeaders.map(h => normalizeHeader(h));
+
+  const payslipIndex = normalizedHeaders.indexOf("payslip type");
+  const staffIdIndex = normalizedHeaders.indexOf("no. pekerja");
+  const namaIndex = normalizedHeaders.indexOf("nama");
+
+  let html = `
+    <table id="dataTable">
+      <thead>
+        <tr>
+  `;
+
+  currentHeaders.forEach((h, i) => {
+    html += `
+      <th style="
+        background:${bg[0][i]};
+        color:${fc[0][i]};
+        font-weight:900;
+      ">
+        ${escapeHtml(h)}
+      </th>
+    `;
+  });
+
+  html += `
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  for(let r = 1; r < data.length; r++){
+    const row = data[r];
+
+    const staffId = String(row[staffIdIndex] || "").trim();
+    const nama = String(row[namaIndex] || "").trim();
+
+    if(!staffId || !nama) continue;
+
+    const realSheetRow = res.headerRow + r;
+
+    payrollRowsCache.push({
+      rowNumber: realSheetRow,
+      values: row
+    });
+
+    html += `<tr data-row-number="${realSheetRow}">`;
+
+    row.forEach((cell, c) => {
+      const headerName = normalizeHeader(currentHeaders[c]);
+
+      if(c === payslipIndex && isEditMode){
+        html += `
+          <td style="background:${bg[r][c]}; color:${fc[r][c]};">
+            <select class="templateDropdown payrollInput" data-col="${c}">
+              <option value="">PaySlip Type</option>
+
+              ${templateOptions.map(t => `
+                <option value="${escapeAttr(t)}"
+                  ${cell === t ? "selected" : ""}>
+                  ${escapeHtml(t)}
+                </option>
+              `).join("")}
+
+            </select>
+          </td>
+        `;
+      }
+
+      else if(c === payslipIndex){
+        html += `
+          <td style="
+            background:${bg[r][c]};
+            color:${fc[r][c]};
+            font-weight:700;
+          ">
+            ${escapeHtml(cell || "-")}
+          </td>
+        `;
+      }
+
+      else if(isEditMode){
+        const lockedColumns = [
+          "jumlah ot",
+          "total"
+        ];
+
+        const isLocked =
+          lockedColumns.includes(headerName) &&
+          c <= 12;
+
+        if(isLocked){
+          html += `
+            <td style="
+              background:${bg[r][c]};
+              color:${fc[r][c]};
+              font-weight:700;
+              opacity:.7;
+            ">
+              ${escapeHtml(cell)}
+            </td>
+          `;
+        }
+
+        else{
+          html += `
+            <td style="background:${bg[r][c]}; color:${fc[r][c]};">
+              <input
+                class="payrollInput"
+                data-col="${c}"
+                value="${escapeAttr(cell)}">
+            </td>
+          `;
+        }
+      }
+
+      else {
+        if(headerName === "file stored link" && cell){
+          html += `
+            <td style="
+              background:${bg[r][c]};
+              color:${fc[r][c]};
+            ">
+              <a
+                href="${escapeAttr(cell)}"
+                target="_blank"
+                style="
+                  color:#2563eb;
+                  font-weight:700;
+                  text-decoration:none;
+                ">
+                Open File
+              </a>
+            </td>
+          `;
+        }
+
+        else{
+          html += `
+            <td style="
+              background:${bg[r][c]};
+              color:${fc[r][c]};
+            ">
+              ${escapeHtml(cell)}
+            </td>
+          `;
+        }
+      }
+    });
+
+    html += `</tr>`;
+  }
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  document.getElementById("tableContainer").innerHTML = html;
+
+  updateStats(data);
+}
+
+  function renderNormalTable(res){
+    const data = res.data || [];
+    const bg = res.backgrounds || [];
+    const fc = res.fontColors || [];
+
+    if(!data.length){
+      document.getElementById("tableContainer").innerHTML = "No data.";
+      return;
+    }
+
+    let html = `<table id="dataTable"><thead><tr>`;
+
+    data[0].forEach((h, i) => {
+      html += `
+        <th style="background:${bg[0][i]}; color:${fc[0][i]};">
+          ${escapeHtml(h)}
+        </th>
+      `;
+    });
+
+    html += `</tr></thead><tbody>`;
+
+    for(let r = 1; r < data.length; r++){
+      const row = data[r];
+
+      if(row.join("").trim() === "") continue;
+
+      html += `<tr>`;
+
+      row.forEach((cell, c) => {
+        html += `
+          <td style="background:${bg[r][c]}; color:${fc[r][c]};">
+            ${escapeHtml(cell)}
+          </td>
+        `;
+      });
+
+      html += `</tr>`;
+    }
+
+    html += `</tbody></table>`;
+
+    document.getElementById("tableContainer").innerHTML = html;
+  }
+
+  function savePayslipTemplate(rowNumber, template){
+    google.script.run
+      .withSuccessHandler(function(res){
+        setMsg(res && res.ok ? "Payslip template saved." : "Failed to save template.");
+      })
+      .withFailureHandler(function(err){
+        setMsg(err.message || "Failed to save template.");
+      })
+      .savePayslipTemplate(currentSheetName, rowNumber, template);
+  }
+
+  function filterTable(){
+    const keyword = document.getElementById("searchInput").value.toLowerCase();
+    const rows = document.querySelectorAll("#dataTable tbody tr");
+
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(keyword) ? "" : "none";
+    });
+  }
+
+  function updateStats(data){
+  if(!data || data.length < 2) return;
+
+  const headers = data[0].map(h => normalizeHeader(h));
+
+  const staffIdIndex = headers.indexOf("no. pekerja");
+  const namaIndex = headers.indexOf("nama");
+  const basicIndex = headers.indexOf("basic");
+  const netIndex = headers.indexOf("net payment");
+
+  const kwspIndex = headers.indexOf("kwsp 11%");
+  const perkesoIndex = headers.indexOf("socso");
+  const sipIndex = headers.indexOf("sip");
+
+  let staff = 0;
+  let totalBasic = 0;
+  let totalNet = 0;
+  let totalDeduct = 0;
+
+  for(let i = 1; i < data.length; i++){
+    const row = data[i];
+
+    const staffId = String(row[staffIdIndex] || "").trim();
+    const nama = String(row[namaIndex] || "").trim();
+
+    if(!staffId || !nama) continue;
+
+    staff++;
+
+    totalBasic += toNumber(row[basicIndex]);
+    totalNet += toNumber(row[netIndex]);
+
+    totalDeduct +=
+      toNumber(row[kwspIndex]) +
+      toNumber(row[perkesoIndex]) +
+      toNumber(row[sipIndex]);
+  }
+
+  document.getElementById("statStaff").textContent = staff;
+  document.getElementById("statBasic").textContent = formatMoney(totalBasic);
+  document.getElementById("statNet").textContent = formatMoney(totalNet);
+  document.getElementById("statDeduct").textContent = formatMoney(totalDeduct);
+}
+
+function normalizeHeader(value){
+  return String(value || "")
+    .replace(/\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+  function toNumber(value){
+    if(value === undefined || value === null) return 0;
+
+    const cleaned = String(value)
+      .replace(/RM/gi, "")
+      .replace(/,/g, "")
+      .replace(/-/g, "0")
+      .trim();
+
+    const n = Number(cleaned);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function formatMoney(num){
+    return Number(num || 0).toLocaleString("en-MY", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  function escapeHtml(value){
+    return String(value)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+  }
+  
+  function toggleEditPayroll(){
+
+  const editBtn = document.getElementById("editTableBtn");
+  const cancelBtn = document.getElementById("cancelEditBtn");
+
+  if(!isEditMode){
+
+    isEditMode = true;
+
+    editBtn.textContent = "Update Table";
+    cancelBtn.classList.remove("hidden");
+
+    if(lastPayrollResponse){
+      renderPayrollTable(lastPayrollResponse);
+    }
+
+    return;
+  }
+
+  updatePayrollTable();
+}
+
+function cancelEditPayroll(){
+
+  isEditMode = false;
+
+  document.getElementById("editTableBtn").textContent = "Edit Table";
+
+  document.getElementById("cancelEditBtn")
+    .classList.add("hidden");
+
+  if(lastPayrollResponse){
+    renderPayrollTable(lastPayrollResponse);
+  }
+
+  setMsg("Edit cancelled.");
+}
+
+function updatePayrollTable(){
+  const rows = [];
+
+  document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
+    const rowNumber = Number(tr.dataset.rowNumber);
+    const oldRow = payrollRowsCache.find(r => r.rowNumber === rowNumber);
+
+    if(!oldRow) return;
+
+    const values = [...oldRow.values];
+
+    tr.querySelectorAll(".payrollInput").forEach(input => {
+      const col = Number(input.dataset.col);
+      values[col] = input.value;
+    });
+
+    rows.push({
+      rowNumber,
+      values
+    });
+  });
+
+  setMsg("Updating table...");
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      setMsg(res && res.ok ? "Table updated." : "Failed to update table.");
+
+      isEditMode = false;
+      document.getElementById("cancelEditBtn").classList.add("hidden");
+      document.getElementById("editTableBtn").textContent = "Edit Table";
+
+      loadPayroll();
+    })
+    .withFailureHandler(function(err){
+      setMsg(err.message || "Failed to update table.");
+    })
+    .updatePayrollRows(currentSheetName, rows);
+}
+
+function calculateCurrentSheet(){
+  const btn = document.getElementById("calculateBtn");
+  const tableContainer = document.getElementById("tableContainer");
+
+  const selectedSheet =
+    document.getElementById("monthSelect").value || currentSheetName;
+
+  currentSheetName = selectedSheet;
+
+  btn.disabled = true;
+  btn.textContent = "Calculating...";
+  setMsg("Calculating payroll for " + selectedSheet + "...");
+
+  tableContainer.innerHTML = `
+    <div style="
+      padding:40px;
+      text-align:center;
+      font-weight:800;
+      color:#0f766e;
+    ">
+      <i class="fa-solid fa-spinner fa-spin" style="font-size:28px;"></i>
+      <br><br>
+      Updating payroll table...
+    </div>
+  `;
+
+  google.script.run
+    .withSuccessHandler(function(res){
+      btn.disabled = false;
+      btn.textContent = "Calculate Payroll";
+
+      setMsg(res && res.ok ? res.message : "Failed to calculate payroll.");
+
+      loadPayroll();
+    })
+    .withFailureHandler(function(err){
+      btn.disabled = false;
+      btn.textContent = "Calculate Payroll";
+
+      setMsg(err.message || "Failed to calculate payroll.");
+      alert(err.message || err);
+
+      loadPayroll();
+    })
+    .calculatePayrollForSheet(selectedSheet);
+}
+
+function sendCurrentSheet(){
+
+  const btn =
+    document.getElementById("sendPayrollBtn");
+
+  const tableContainer =
+    document.getElementById("tableContainer");
+
+  const selectedSheet =
+    document.getElementById("monthSelect").value
+    || currentSheetName;
+
+  currentSheetName = selectedSheet;
+
+  btn.disabled = true;
+
+  btn.textContent = "Sending Payroll...";
+
+  setMsg(
+    "Sending payroll for " +
+    selectedSheet +
+    "..."
+  );
+
+  // SHOW LOADING UI
+  tableContainer.innerHTML = `
+    <div style="
+      padding:40px;
+      text-align:center;
+      font-weight:800;
+      color:#0f766e;
+    ">
+
+      <i class="fa-solid fa-spinner fa-spin"
+         style="font-size:28px;"></i>
+
+      <br><br>
+
+      Sending payroll...
+
+      <br>
+
+      <span style="
+        font-size:13px;
+        color:#6b7280;
+      ">
+        Generating payslips and sending emails.
+        Please wait.
+      </span>
+
+    </div>
+  `;
+
+  // FORCE BROWSER RENDER DULU
+  requestAnimationFrame(() => {
+
+    requestAnimationFrame(() => {
+
+      google.script.run
+
+        .withSuccessHandler(function(res){
+
+          btn.disabled = false;
+
+          btn.textContent = "Send Payroll";
+
+          setMsg(
+            res && res.ok
+              ? res.message
+              : "Failed to send payroll."
+          );
+
+          // REFRESH LEPAS SEMUA HABIS
+          loadPayroll();
+        })
+
+        .withFailureHandler(function(err){
+
+          btn.disabled = false;
+
+          btn.textContent = "Send Payroll";
+
+          setMsg(
+            err.message ||
+            "Failed to send payroll."
+          );
+
+          alert(err.message || err);
+
+          loadPayroll();
+        })
+
+        .sendPayrollForSheet(selectedSheet);
+
+    });
+
+  });
+
+}
+
+  function escapeAttr(value){
+    return escapeHtml(value);
+  }
+</script>
+
+</body>
+</html>
